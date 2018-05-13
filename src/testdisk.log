@@ -1,0 +1,101 @@
+
+
+Sat May 12 17:17:31 2018
+Command line: TestDisk
+
+TestDisk 7.0, Data Recovery Utility, April 2015
+Christophe GRENIER <grenier@cgsecurity.org>
+http://www.cgsecurity.org
+OS: Linux, kernel 4.4.0-124-generic (#148-Ubuntu SMP Wed May 2 13:00:18 UTC 2018) x86_64
+Compiler: GCC 5.3
+ext2fs lib: 1.42.13, ntfs lib: libntfs-3g, reiserfs lib: none, ewf lib: none, curses lib: ncurses 6.0
+/dev/sda: LBA, HPA, LBA48, DCO support
+/dev/sda: size       1953525168 sectors
+/dev/sda: user_max   1953525168 sectors
+/dev/sda: native_max 1953525168 sectors
+/dev/sda: dco        1953525168 sectors
+Warning: can't get size for Disk /dev/mapper/control - 0 B - 0 sectors, sector size=512
+Hard disk list
+Disk /dev/sda - 1000 GB / 931 GiB - CHS 121601 255 63, sector size=512 - ST1000DM003-1CH162, S/N:S1DD25GX, FW:CC44
+Disk /dev/sdb - 32 GB / 29 GiB - CHS 30528 64 32, sector size=512 - Multiple Card  Reader, FW:1.00
+
+Partition table type (auto): Intel
+Disk /dev/sdb - 32 GB / 29 GiB - Multiple Card  Reader
+Partition table type: None
+
+Interface Advanced
+   P Unknown                  0   0  1 30527  63 32   62521344
+Change partition type:
+   P FAT32                    0   0  1 30527  63 32   62521344
+
+fat32_boot_sector
+   P FAT32                    0   0  1 30527  63 32   62521344
+Boot sector
+Bad
+
+Backup boot sector
+Bad
+
+First sectors (Boot code and partition information) are not identical.
+
+A valid FAT Boot sector must be present in order to access
+any data; even if the partition is not bootable.
+
+   P FAT32                    0   0  1 30527  63 32   62521344
+rebuild_FAT_BS p_fat12 0, p_fat16 0, p_fat32 1
+fat_find_type(max_offset=488512, p_fat12=0, p_fat16=0, p_fat32=1, debug=1, dump_ind=0)
+No FAT found, reserved=0, fat_length=0
+find_sectors_per_cluster skip_sectors=2860 (skip_offset=1464320)
+Can't find cluster size
+
+fat32_boot_sector
+   P FAT32                    0   0  1 30527  63 32   62521344
+Boot sector
+Bad
+
+Backup boot sector
+Bad
+
+First sectors (Boot code and partition information) are not identical.
+
+A valid FAT Boot sector must be present in order to access
+any data; even if the partition is not bootable.
+
+Analyse Disk /dev/sdb - 32 GB / 29 GiB - CHS 30528 64 32
+Current partition structure:
+   P Unknown                  0   0  1 30527  63 32   62521344
+
+search_part()
+Disk /dev/sdb - 32 GB / 29 GiB - CHS 30528 64 32
+FAT16 at 4/0/1
+FAT1 : 1-88
+FAT2 : 89-176
+start_rootdir : 177
+Data : 209-88260
+sectors : 88262
+cluster_size : 4
+no_of_cluster : 22013 (2 - 22014)
+fat_length 88 calculated 86
+
+FAT16 at 4/0/1
+     FAT16                    4   0  1    47   6  6      88262
+     FAT16, blocksize=2048, 45 MB / 43 MiB
+Search for partition aborted
+
+Results
+   P FAT16                    4   0  1    47   6  6      88262
+     FAT16, blocksize=2048, 45 MB / 43 MiB
+
+Hint for advanced users. dmsetup may be used if you prefer to avoid to rewrite the partition table for the moment:
+echo "0 88262 linear /dev/sdb 8192" | dmsetup create test0
+
+interface_write()
+   P FAT16                    4   0  1    47   6  6      88262
+ 
+Write isn't available because the partition table type "None" has been selected.
+New options :
+ Dump : No
+ Align partition: Yes
+ Expert mode : No
+
+TestDisk exited normally.

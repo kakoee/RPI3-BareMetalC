@@ -1,0 +1,25 @@
+set -e
+
+dev="${1:-/dev/sdb}"
+part="${2:-1}"
+part_dev="${dev}${part}"
+mnt='/mnt/rpi'
+
+
+# Generate kernel7.img
+arm-none-eabi-as start.S -o start.o
+arm-none-eabi-ld start.o main.o -T ldscript -o main.elf
+# Get the raw assembly out of the generated elf file.
+arm-none-eabi-objcopy main.elf -O binary kernel7.img
+
+# Prepare the filesystem.
+sudo umount "$part_dev"
+echo 'start=2048, type=c' | sudo sfdisk "$dev"
+sudo mkfs.vfat "$part_dev"
+sudo mkdir -p "$mnt"
+sudo mount "${part_dev}" "$mnt"
+sudo cp kernel7.img ../bootcode.bin ../start.elf "$mnt"
+
+# Cleanup.
+sync
+sudo umount "$mnt"
