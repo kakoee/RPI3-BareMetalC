@@ -1,7 +1,7 @@
 #include <stdint.h>
 #define PI3_GPIO_BASE       0x3F200000UL // 7E2 -> 3F2
 
-#define PI3_IRQ_BASE        0x3F20B000UL 
+#define PI3_IRQ_BASE        0x3F00B000UL 
 
 
 #define GPFSEL0 (PI3_GPIO_BASE+0x00000000)
@@ -11,6 +11,9 @@
 #define GPREN0  (PI3_GPIO_BASE+0x0000004C)  // rising edge detect enable 
 #define GPFEN0  (PI3_GPIO_BASE+0x00000058)  // falling edge detect enable
 
+#define GPEDS0  (PI3_GPIO_BASE+0x00000040)  // event detect status
+
+
 #define PI3_IRQ0_EN (PI3_IRQ_BASE + 0x210)
 #define PI3_IRQ1_EN (PI3_IRQ_BASE + 0x214)
 
@@ -18,6 +21,10 @@
 #define RED 12
 #define GREEN 13
 #define YELLOW 16
+
+#define REDINPUT 19
+#define REDOUTPUT 20
+
 
 
 #define MDELAY 5000000
@@ -145,7 +152,20 @@ void FALL_EN_GPIO(uint32_t gpio_num, char en)
 
 }
 
-void enable_gpio_interrupts(char en)
+void CLEAR_EVENT_GPIO(uint32_t gpio_num)
+{
+	uint32_t gp_reg_index = gpio_num >> 5; // each bit control one GPIO
+
+	volatile uint32_t* reg_gped_addr = (uint32_t*) (GPEDS0 + 4*gp_reg_index); 
+
+	unsigned char bit_pos = gpio_num&0x1F; //remainder by 32
+
+	uint32_t mask = 0x1 << bit_pos;
+	*reg_gped_addr = mask;
+
+}
+
+void enable_gpio_interrupts()
 {
 
 // GPIO interrupts are #49, #50, #51, #52
@@ -153,21 +173,25 @@ void enable_gpio_interrupts(char en)
 // set bits 17,18,19,20
 
 	volatile uint32_t* irq_reg = (uint32_t*)PI3_IRQ1_EN;
-	uint32_t mask = 0x1E00; // bits 17,18,19,20
-	uint32_t cur_en = *irq_reg;
-
-	if(en)
-	{
-		cur_en|=mask;
-	}
-	else {
-		mask=~mask;
-		cur_en&=mask;
-	}
-
-	*irq_reg = cur_en;
+	uint32_t mask = 0x1E0000; // bits 17,18,19,20
+	*irq_reg = mask;
 
 }
+
+
+void __attribute__((interrupt("IRQ"))) gpio_irq(void)
+{
+	static char toggle = 0;
+	if(!toggle)
+		SET_GPIO(REDOUTPUT);
+	else 
+		SET_GPIO(REDOUTPUT);
+
+	toggle = !toggle;
+	CLEAR_EVENT_GPIO(REDINPUT);
+
+}
+
 
 
 
@@ -180,36 +204,60 @@ for(tim = 0; tim < mdelay; tim++)
 
 }
 
+void traffic_light()
+{
+	SEL_GPIO(RED,1);
+	SEL_GPIO(YELLOW,1);
+	SEL_GPIO(GREEN,1);
+	CLR_GPIO(RED);
+	CLR_GPIO(YELLOW);
+	CLR_GPIO(GREEN);
+
+	while(1)
+	{
+		SET_GPIO(RED);
+		CLR_GPIO(GREEN);
+
+		delay(MDELAY);
+
+		SET_GPIO(YELLOW);
+		CLR_GPIO(RED);
+
+		delay(SDELAY);
+
+		SET_GPIO(GREEN);
+		CLR_GPIO(YELLOW);
+
+		delay(MDELAY);
+
+	}
+
+}
+
+void irq_toggle_red()
+{
+	SEL_GPIO(RED,1);
+	SEL_GPIO(REDINPUT,0); // input as it is used to receive interrupt 
+
+	RISE_EN_GPIO(REDINPUT,1);  // enable rise edge detect on REDINPUT. on board RED GPIO is connected to REDINPUT GPIO
+	FALL_EN_GPIO(REDINPUT,1);  // enable fall edge detect on REDINPUT. on board RED GPIO is connected to REDINPUT GPIO
+
+	SEL_GPIO(REDOUTPUT,1); // REDOUTPUT GPIO is connected to LED
+	enable_gpio_interrupts(1);
+	CLEAR_EVENT_GPIO(REDINPUT);
+
+	while(1){
+		delay(SDELAY);
+		CLR_GPIO(RED);
+		SET_GPIO(RED);		
+	}
+
+}
 
 int main()
 {
 
-//Set mode to be output 
-SEL_GPIO(RED,1);
-SEL_GPIO(YELLOW,1);
-SEL_GPIO(GREEN,1);
-CLR_GPIO(RED);
-CLR_GPIO(YELLOW);
-CLR_GPIO(GREEN);
-
-while(1)
-{
-SET_GPIO(RED);
-CLR_GPIO(GREEN);
-
-delay(MDELAY);
-
-SET_GPIO(YELLOW);
-CLR_GPIO(RED);
-
-delay(SDELAY);
-
-SET_GPIO(GREEN);
-CLR_GPIO(YELLOW);
-
-delay(MDELAY);
-
-}
+irq_toggle_red();
 
 return 1;
 }
